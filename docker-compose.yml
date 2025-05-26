@@ -16,7 +16,7 @@ services:
     environment:
       - NODE_ENV=production
     env_file:
-      - .env
+      - .env.production
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]

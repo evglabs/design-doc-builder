@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import { initializeDatabase } from './database/connection';
 import { loadEnvironment } from './utils/constants';
 
@@ -65,6 +66,15 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files in production (built frontend)
+if (env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '../public');
+  app.use(express.static(publicPath, {
+    maxAge: '1d',
+    etag: false
+  }));
+}
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -78,13 +88,21 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 
-// Handle 404
+// Handle 404 for API routes
 app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     success: false, 
     error: 'API endpoint not found' 
   });
 });
+
+// Serve frontend for all non-API routes in production (SPA fallback)
+if (env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    const indexPath = path.join(__dirname, '../public/index.html');
+    res.sendFile(indexPath);
+  });
+}
 
 // Global error handler
 app.use((err: any, req: any, res: any, next: any) => {
