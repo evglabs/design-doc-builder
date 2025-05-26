@@ -4,7 +4,7 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY frontend/ ./
 RUN npm run build
@@ -14,12 +14,19 @@ FROM node:18-alpine AS backend-builder
 
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY backend/ ./
 RUN npm run build
 
-# Stage 3: Production image
+# Stage 3: Production runtime dependencies
+FROM node:18-alpine AS production-deps
+
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm ci --only=production
+
+# Stage 4: Production image
 FROM node:18-alpine AS production
 
 # Install curl for healthcheck
@@ -28,10 +35,12 @@ RUN apk add --no-cache curl
 # Create app directory
 WORKDIR /app
 
-# Copy backend build and dependencies
-COPY --from=backend-builder /app/backend/dist ./dist
-COPY --from=backend-builder /app/backend/node_modules ./node_modules
+# Copy production dependencies
+COPY --from=production-deps /app/backend/node_modules ./node_modules
 COPY --from=backend-builder /app/backend/package*.json ./
+
+# Copy backend build
+COPY --from=backend-builder /app/backend/dist ./dist
 
 # Copy frontend build to serve statically
 COPY --from=frontend-builder /app/frontend/dist ./public
