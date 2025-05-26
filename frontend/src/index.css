@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+}
+
+.dark {
+  --color-primary: #60a5fa;
+  --color-primary-dark: #3b82f6;
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-border: #374151;
+}
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-gray-200;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+
+  .dark .input {
+    @apply border-gray-600;
+  }
+
+  .textarea {
+    @apply input resize-none;
+    min-height: 120px;
+  }
+
+  .card {
+    @apply rounded-lg border shadow-sm;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  .sidebar-item {
+    @apply flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer;
+  }
+
+  .sidebar-item:hover {
+    background-color: var(--color-surface);
+  }
+
+  .sidebar-item.active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  .section-complete {
+    @apply text-green-600;
+  }
+
+  .dark .section-complete {
+    @apply text-green-400;
+  }
+
+  .auto-save-indicator {
+    @apply text-xs text-gray-500 flex items-center space-x-1;
+  }
+
+  .dark .auto-save-indicator {
+    @apply text-gray-400;
+  }
+}
+
+/* Loading animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
