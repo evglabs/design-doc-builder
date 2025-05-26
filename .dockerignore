@@ -8,11 +8,15 @@ backend/node_modules
 .git
 .gitignore
 
-# Environment files (will be handled separately)
+# Environment files (exclude actual secrets, keep examples)
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 backend/.env
 frontend/.env
+# Note: .env.example and .env.production are kept for Docker builds
 
 # Database files (should not be in container)
 *.db
