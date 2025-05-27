@@ -4,9 +4,8 @@ This guide explains how to run the Design Document Builder using Docker.
 
 ## 🐳 Docker Configuration Overview
 
-The application uses a multi-container setup:
-- **app**: Main application container (frontend + backend)
-- **nginx**: Reverse proxy and load balancer
+The application uses a simplified single-container setup:
+- **app**: Main application container (frontend + backend combined)
 - **volumes**: Persistent storage for database, uploads, and backups
 
 ## 📋 Prerequisites
@@ -16,25 +15,25 @@ The application uses a multi-container setup:
 
 ## 🚀 Quick Start
 
-### **Option 1: Simple App Only**
+### **Option 1: Background Mode**
 ```bash
-# Build and run just the main application
-docker-compose up app
+# Build and run in background
+docker-compose up -d --build
 ```
-Access at: http://localhost:3000
 
-### **Option 2: Full Production Setup**
+### **Option 2: With Live Logs**
 ```bash
-# Build and run with nginx reverse proxy
+# Build and run with live log output
 docker-compose up --build
 ```
-Access at: http://localhost (port 80)
 
-### **Option 3: Development with Live Logs**
+### **Option 3: Just Build**
 ```bash
-# Run with live log output
-docker-compose up --build --no-daemon
+# Build the container only
+docker-compose build
 ```
+
+**Access at**: http://localhost:3000
 
 ## 🔧 Environment Configuration
 
@@ -67,13 +66,11 @@ Docker volumes ensure data persists across container restarts:
 ## 🌐 Network Configuration
 
 ### **Ports**
-- **App Container**: Internal port 3000
-- **Nginx Container**: Ports 80 (HTTP) and 443 (HTTPS)
+- **App Container**: Port 3000 (exposed to host)
 
 ### **URLs**
-- **Direct App Access**: http://localhost:3000
-- **Via Nginx**: http://localhost
-- **API Health Check**: http://localhost/health
+- **Application**: http://localhost:3000
+- **API Health Check**: http://localhost:3000/api/health
 
 ## 🛠 Build Process
 
@@ -81,21 +78,21 @@ The Dockerfile uses multi-stage builds:
 
 1. **Frontend Build**: Compiles React/TypeScript to static files
 2. **Backend Build**: Compiles TypeScript to JavaScript
-3. **Production Image**: Combines both with optimized Node.js runtime
+3. **Production Runtime**: Installs only production dependencies
+4. **Final Image**: Combines built frontend and backend with optimized Node.js runtime
 
 ## 📊 Monitoring & Health Checks
 
 ### **Built-in Health Checks**
 ```bash
 # Check application health
-curl http://localhost/health
+curl http://localhost:3000/api/health
 
 # View container status
 docker-compose ps
 
 # View logs
 docker-compose logs app
-docker-compose logs nginx
 ```
 
 ### **Container Status**
@@ -132,7 +129,7 @@ docker-compose up --build
 ### **View Logs**
 ```bash
 docker-compose logs -f app    # Follow app logs
-docker-compose logs nginx     # View nginx logs
+docker-compose logs app       # View recent logs
 ```
 
 ### **Database Operations**
@@ -142,6 +139,9 @@ docker-compose exec app cp /app/database/app.db /app/backups/backup-$(date +%Y%m
 
 # Access database files
 ls -la ./database/
+
+# Connect to container shell
+docker-compose exec app sh
 ```
 
 ## 🔍 Troubleshooting
@@ -155,7 +155,6 @@ docker-compose logs app
 cat .env.production
 
 # Check port conflicts
-netstat -tulpn | grep :80
 netstat -tulpn | grep :3000
 ```
 
@@ -175,11 +174,14 @@ docker system prune -a
 docker-compose build --no-cache
 ```
 
-### **Network Issues**
+### **Application Issues**
 ```bash
-# Check container networking
-docker network ls
-docker-compose exec app ping nginx
+# Check container health
+docker-compose exec app curl -f http://localhost:3000/api/health
+
+# Inspect container
+docker-compose exec app ps aux
+docker-compose exec app ls -la /app
 ```
 
 ## 🏗 Development vs Production
@@ -189,24 +191,15 @@ docker-compose exec app ping nginx
 - Source maps available
 - Debug logging
 - Direct file mounting
+- Frontend: http://localhost:5174
+- Backend: http://localhost:3000
 
 ### **Production** (Use Docker)
 - Optimized builds
 - Security hardening
-- Reverse proxy
+- Combined frontend + backend
 - Health monitoring
-
-## 🔐 SSL/HTTPS Setup (Optional)
-
-To enable HTTPS:
-
-1. **Add SSL certificates to `./ssl/` directory**
-2. **Update nginx.conf** (uncomment HTTPS server block)
-3. **Restart containers**:
-   ```bash
-   docker-compose down
-   docker-compose up -d
-   ```
+- Single URL: http://localhost:3000
 
 ## 📈 Performance Tuning
 
@@ -220,22 +213,57 @@ services:
         limits:
           memory: 512M
           cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 ```
 
-### **Nginx Optimizations**
-The nginx.conf includes:
-- Gzip compression
+### **Application Optimizations**
+The production build includes:
+- Minified frontend assets
+- Tree-shaken JavaScript bundles
+- Optimized images and fonts
+- Gzip compression via Express
 - Static file caching
-- Performance headers
-- Security headers
+
+## 🔐 Adding SSL/HTTPS (Optional)
+
+Since nginx is removed, you have several options for SSL:
+
+### **Option 1: External Reverse Proxy**
+Use an external nginx, Apache, or cloud load balancer to handle SSL and proxy to http://localhost:3000
+
+### **Option 2: Add SSL to Express**
+Modify the backend to handle SSL certificates directly (requires code changes)
+
+### **Option 3: Use Docker with SSL Termination**
+Add a separate nginx container or use a service like Traefik
 
 ## 🚨 Important Notes
 
 1. **First Run**: Database will be created automatically
 2. **Persistence**: Data survives container restarts via volumes
 3. **Security**: Change default JWT_SECRET before production use
-4. **Ports**: Ensure ports 80 and 3000 are available
+4. **Port**: Ensure port 3000 is available
 5. **Resources**: Monitor disk space for database and uploads
+6. **Single Container**: Frontend and backend run in the same container
+7. **Direct Access**: No reverse proxy - direct connection to application
+
+## 📝 Simplified Commands
+
+```bash
+# Start the application
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose down
+
+# Full restart with rebuild
+docker-compose down && docker-compose up --build
+```
 
 ---
 

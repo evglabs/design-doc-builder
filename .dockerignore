@@ -77,9 +77,6 @@ github-upload-commands.md
 # Scripts not needed in container
 start-dev.sh
 
-# Nginx config (handled by docker-compose)
-nginx.conf
-
 # Uploads and backups (will be volumes)
 uploads
 backups
