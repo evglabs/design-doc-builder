@@ -42,6 +42,9 @@ COPY --from=backend-builder /app/backend/package*.json ./
 # Copy backend build
 COPY --from=backend-builder /app/backend/dist ./dist
 
+# Copy SQL schema file (not included in TypeScript build)
+COPY --from=backend-builder /app/backend/src/database/schema.sql ./dist/database/
+
 # Copy frontend build to serve statically
 COPY --from=frontend-builder /app/frontend/dist ./public
 
