@@ -18,9 +18,9 @@ import documentRoutes from './routes/documents';
 
 const app = express();
 
-// Security middleware
+// Security middleware - relaxed for single container deployment
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: env.NODE_ENV === 'production' ? false : {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
@@ -33,10 +33,17 @@ app.use(helmet({
 // Trust proxy headers when behind reverse proxy
 app.set('trust proxy', true);
 
-// CORS configuration
+// CORS configuration - optimized for single container
 app.use(cors({
   origin: env.NODE_ENV === 'production' 
-    ? true // Allow all origins in production when behind reverse proxy
+    ? function (origin, callback) {
+        // Allow same-origin requests (no origin) and localhost
+        if (!origin || origin.includes('localhost:3000')) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      }
     : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true
 }));
